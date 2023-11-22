@@ -33,7 +33,7 @@ public class BaseCommand {
 		context.getSource().sendMessage(Text.literal(
 				Utils.formatMessage(
 				"§3§lUsage:\n" +
-						"§b- <pokemon/ability/type/moves>",
+						"§b- /wiki <pokemon/ability/type/moves>",
 						context.getSource().isExecutedByPlayer()
 				)));
 		return 1;
