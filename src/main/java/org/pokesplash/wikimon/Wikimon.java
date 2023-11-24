@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.pokesplash.wikimon.command.CommandHandler;
 import org.pokesplash.wikimon.config.Config;
 import org.pokesplash.wikimon.config.Lang;
+import org.pokesplash.wikimon.util.SpawnDetails;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,5 +34,6 @@ public class Wikimon implements ModInitializer {
 	public static void load() {
 		config.init();
 		lang.init();
+		SpawnDetails.init();
 	}
 }

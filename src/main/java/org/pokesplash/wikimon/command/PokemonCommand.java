@@ -1,19 +1,36 @@
 package org.pokesplash.wikimon.command;
 
 import com.cobblemon.mod.common.Cobblemon;
+import com.cobblemon.mod.common.CobblemonItems;
+import com.cobblemon.mod.common.api.abilities.Abilities;
+import com.cobblemon.mod.common.api.moves.Moves;
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies;
-import com.cobblemon.mod.common.api.spawning.BestSpawner;
-import com.cobblemon.mod.common.api.spawning.CobblemonSpawnPools;
+import com.cobblemon.mod.common.api.pokemon.stats.Stat;
+import com.cobblemon.mod.common.api.pokemon.stats.Stats;
+import com.cobblemon.mod.common.api.spawning.*;
+import com.cobblemon.mod.common.api.spawning.detail.SpawnDetail;
+import com.cobblemon.mod.common.command.SpawnPokemon;
+import com.cobblemon.mod.common.data.CobblemonDataProvider;
+import com.cobblemon.mod.common.item.CobblemonItem;
+import com.cobblemon.mod.common.item.PokemonItem;
+import com.cobblemon.mod.common.pokemon.FormData;
 import com.cobblemon.mod.common.pokemon.Species;
+import com.google.gson.Gson;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import org.pokesplash.wikimon.Wikimon;
 import org.pokesplash.wikimon.util.LuckPermsUtils;
 import org.pokesplash.wikimon.util.Utils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class PokemonCommand {
 	public LiteralCommandNode<ServerCommandSource> build() {
@@ -25,7 +42,7 @@ public class PokemonCommand {
 						return true;
 					}
 				})
-				.executes(this::run)
+				.executes(this::usage)
 				.then(CommandManager.argument("pokemon", StringArgumentType.string())
 						.suggests((ctx, builder) -> {
 							for (Species species : PokemonSpecies.INSTANCE.getImplemented()) {
@@ -33,24 +50,133 @@ public class PokemonCommand {
 							}
 							return builder.buildFuture();
 						})
-						.executes(this::run)
+						.executes(this::stats)
+						.then(CommandManager.literal("stats")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("gender")
+								.executes(this::gender)
+						)
+						.then(CommandManager.literal("ability")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("catchrate")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("drops")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("type")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("tm")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("egg")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("moves")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("tutor")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("evo")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("evs")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("weight")
+								.executes(this::stats)
+						)
+						.then(CommandManager.literal("spawn")
+								.executes(this::stats)
+						)
 				).build();
 	}
 
-	public int run(CommandContext<ServerCommandSource> context) {
 
-		String pokemonString = StringArgumentType.getString(context, "pokemon");
+	public int stats(CommandContext<ServerCommandSource> context) {
 
-		Species pokemon = PokemonSpecies.INSTANCE.getByName(pokemonString);
-
-		if (pokemon == null) {
-			context.getSource().sendMessage(Text.literal(
-					Utils.formatMessage("§cPokemon " + pokemonString + " could not be found",
-							context.getSource().isExecutedByPlayer())
-			));
+		if (!context.getSource().isExecutedByPlayer()) {
+			return 1;
 		}
 
-		CobblemonSpawnPools.WORLD_SPAWN_POOL.getDetails()
+		String pokemonString = StringArgumentType.getString(context, "pokemon");
+		Species pokemon = PokemonSpecies.INSTANCE.getByName(pokemonString.toLowerCase());
+
+		List<FormData> forms = pokemon.getForms();
+
+		if (forms.isEmpty()) {
+			forms.add(pokemon.getStandardForm());
+		}
+
+		ArrayList<String> stats = new ArrayList<>();
+		for (FormData form : forms) {
+
+			Map<Stat, Integer> formStats = form.getBaseStats();
+
+			String message = form.getName() +
+					"\n§2HP: " + formStats.get(Stats.HP) +
+					"\n§6Atk: " + formStats.get(Stats.ATTACK) +
+					"\n§6Def: " + formStats.get(Stats.DEFENCE) +
+					"\n§dSpA: " + formStats.get(Stats.SPECIAL_ATTACK) +
+					"\n§eSpD: " + formStats.get(Stats.SPECIAL_DEFENCE) +
+					"\n§bSpe: " + formStats.get(Stats.SPEED);
+
+			stats.add(message);
+		}
+
+		context.getSource().sendMessage(Text.literal(
+				format(pokemon, "Stats", stats)
+		));
+
+		return 1;
+	}
+
+	public int gender(CommandContext<ServerCommandSource> context) {
+
+		if (!context.getSource().isExecutedByPlayer()) {
+			return 1;
+		}
+
+		String pokemonString = StringArgumentType.getString(context, "pokemon");
+		Species pokemon = PokemonSpecies.INSTANCE.getByName(pokemonString.toLowerCase());
+
+		ArrayList<String> stats = new ArrayList<>();
+		for (FormData form : pokemon.getForms()) {
+
+			Map<Stat, Integer> formStats = form.getBaseStats();
+
+			String message = form.getName() +
+					"\n§2HP: " + formStats.get(Stats.HP) +
+					"\n§6Atk: " + formStats.get(Stats.ATTACK) +
+					"\n§6Def: " + formStats.get(Stats.DEFENCE) +
+					"\n§dSpA: " + formStats.get(Stats.SPECIAL_ATTACK) +
+					"\n§eSpD: " + formStats.get(Stats.SPECIAL_DEFENCE) +
+					"\n§bSpe: " + formStats.get(Stats.SPEED);
+
+			stats.add(message);
+		}
+
+		if (pokemon.getForms().isEmpty()) {
+			Map<Stat, Integer> formStats = pokemon.getStandardForm().getBaseStats();
+
+			String message = "Normal" +
+					"\n§2HP: " + formStats.get(Stats.HP) +
+					"\n§6Atk: " + formStats.get(Stats.ATTACK) +
+					"\n§6Def: " + formStats.get(Stats.DEFENCE) +
+					"\n§dSpA: " + formStats.get(Stats.SPECIAL_ATTACK) +
+					"\n§eSpD: " + formStats.get(Stats.SPECIAL_DEFENCE) +
+					"\n§bSpe: " + formStats.get(Stats.SPEED);
+
+			stats.add(message);
+		}
+
+		context.getSource().sendMessage(Text.literal(
+				format(pokemon, "Stats", stats)
+		));
 
 		return 1;
 	}
@@ -59,8 +185,21 @@ public class PokemonCommand {
 		context.getSource().sendMessage(Text.literal(
 				Utils.formatMessage(
 						"§3§lUsage:\n" +
-								"§b- /wiki pokemon <pokemon>",
+								"§b- /wiki pokemon <pokemon> <field>",
 						context.getSource().isExecutedByPlayer()
 				)));
+
+		return 1;
 	}
+
+	public String format(Species pokemon, String header, ArrayList<String> data) {
+		StringBuilder base = new StringBuilder("§3§l" + pokemon.getName() + " - " + header);
+
+		for (String text : data) {
+			base.append("\n§e§n").append(text);
+		}
+
+		return base.toString();
+	}
+
 }
