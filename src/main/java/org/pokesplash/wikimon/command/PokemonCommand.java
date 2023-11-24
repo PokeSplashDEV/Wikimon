@@ -136,7 +136,6 @@ public class PokemonCommand {
 	}
 
 	public int gender(CommandContext<ServerCommandSource> context) {
-
 		if (!context.getSource().isExecutedByPlayer()) {
 			return 1;
 		}
@@ -144,38 +143,25 @@ public class PokemonCommand {
 		String pokemonString = StringArgumentType.getString(context, "pokemon");
 		Species pokemon = PokemonSpecies.INSTANCE.getByName(pokemonString.toLowerCase());
 
-		ArrayList<String> stats = new ArrayList<>();
-		for (FormData form : pokemon.getForms()) {
+		List<FormData> forms = pokemon.getForms();
 
-			Map<Stat, Integer> formStats = form.getBaseStats();
-
-			String message = form.getName() +
-					"\n§2HP: " + formStats.get(Stats.HP) +
-					"\n§6Atk: " + formStats.get(Stats.ATTACK) +
-					"\n§6Def: " + formStats.get(Stats.DEFENCE) +
-					"\n§dSpA: " + formStats.get(Stats.SPECIAL_ATTACK) +
-					"\n§eSpD: " + formStats.get(Stats.SPECIAL_DEFENCE) +
-					"\n§bSpe: " + formStats.get(Stats.SPEED);
-
-			stats.add(message);
+		if (forms.isEmpty()) {
+			forms.add(pokemon.getStandardForm());
 		}
 
-		if (pokemon.getForms().isEmpty()) {
-			Map<Stat, Integer> formStats = pokemon.getStandardForm().getBaseStats();
+		ArrayList<String> stats = new ArrayList<>();
+		for (FormData form : forms) {
 
-			String message = "Normal" +
-					"\n§2HP: " + formStats.get(Stats.HP) +
-					"\n§6Atk: " + formStats.get(Stats.ATTACK) +
-					"\n§6Def: " + formStats.get(Stats.DEFENCE) +
-					"\n§dSpA: " + formStats.get(Stats.SPECIAL_ATTACK) +
-					"\n§eSpD: " + formStats.get(Stats.SPECIAL_DEFENCE) +
-					"\n§bSpe: " + formStats.get(Stats.SPEED);
+			form.getMaleRatio();
+
+			String message = form.getName() +  "\n§9Male §e" + (form.getMaleRatio() * 100) +
+					"%\n§dFemale §e" + ((1-form.getMaleRatio()) * 100) + "%";
 
 			stats.add(message);
 		}
 
 		context.getSource().sendMessage(Text.literal(
-				format(pokemon, "Stats", stats)
+				format(pokemon, "Gender Ratio", stats)
 		));
 
 		return 1;
@@ -196,7 +182,7 @@ public class PokemonCommand {
 		StringBuilder base = new StringBuilder("§3§l" + pokemon.getName() + " - " + header);
 
 		for (String text : data) {
-			base.append("\n§e§n").append(text);
+			base.append("\n§7§o").append(text);
 		}
 
 		return base.toString();
