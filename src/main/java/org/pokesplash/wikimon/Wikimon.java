@@ -1,9 +1,11 @@
 package org.pokesplash.wikimon;
 
+import com.cobblemon.mod.common.api.events.CobblemonEvents;
 import com.cobblemon.mod.common.api.spawning.detail.SpawnDetail;
 import com.cobblemon.mod.common.pokemon.Species;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.pokesplash.wikimon.command.CommandHandler;
@@ -29,11 +31,12 @@ public class Wikimon implements ModInitializer {
 	public void onInitialize() {
 		CommandRegistrationCallback.EVENT.register(CommandHandler::registerCommands);
 		load();
+
+		ServerWorldEvents.LOAD.register((e, f) -> SpawnDetails.init());
 	}
 
 	public static void load() {
 		config.init();
 		lang.init();
-		SpawnDetails.init();
 	}
 }
